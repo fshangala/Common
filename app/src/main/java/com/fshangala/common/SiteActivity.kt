@@ -1,6 +1,6 @@
 package com.fshangala.common
 
-import android.content.Context
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.SharedPreferences
 import android.graphics.Bitmap
@@ -15,8 +15,6 @@ import android.webkit.WebViewClient
 import android.widget.TextView
 import android.widget.Toast
 import androidx.lifecycle.ViewModelProvider
-import java.time.LocalDateTime
-import java.time.ZoneOffset
 
 class SiteActivity : AppCompatActivity() {
     private var webView: WebView? = null
@@ -24,11 +22,12 @@ class SiteActivity : AppCompatActivity() {
     private var status: TextView? = null
     private var oddStatus: TextView? = null
     private var sharedPref: SharedPreferences? = null
-    var toast: Toast? = null
-    private var betsite_url: String? = null
+    private var toast: Toast? = null
+    private var betsiteUrl: String? = null
     private var pelpath:String? = null
     private var pelindex:Int? = null
     private var pelement:String? = null
+    @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_site)
@@ -38,19 +37,17 @@ class SiteActivity : AppCompatActivity() {
 
         webView = findViewById(R.id.webView)
 
-
-        true.also {
-            webView!!.settings.javaScriptEnabled = it
-            webView!!.settings.domStorageEnabled = it
-            webView!!.settings.allowContentAccess = it
-            webView!!.settings.allowFileAccess = it
-        }
+        webView!!.settings.javaScriptEnabled  = true
+        webView!!.settings.domStorageEnabled = true
+        webView!!.settings.allowContentAccess = true
+        webView!!.settings.allowFileAccess = true
         webView!!.addJavascriptInterface(LamboJsInterface(),"lambo")
+
         model = ViewModelProvider(this)[LamboViewModel::class.java]
         status = findViewById(R.id.status)
         oddStatus = findViewById(R.id.odd)
 
-        betsite_url = sharedPref!!.getString("betsite_url","google.com")
+        betsiteUrl = sharedPref!!.getString("betsite_url","google.com")
         startBrowser()
 
         model!!.connectionStatus.observe(this) {
@@ -60,28 +57,28 @@ class SiteActivity : AppCompatActivity() {
         model!!.browserLoading.observe(this){ isLoading ->
             if (isLoading == true) {
                 runOnUiThread {
-                    status!!.text = "Loading..."
+                    val statusText = "Loading.."
+                    status!!.text = statusText
                 }
-                model!!.jslog.postValue("Page loading...")
             } else {
                 runOnUiThread {
-                    status!!.text = "Loaded!"
+                    val statusText = "Loaded!"
+                    status!!.text = statusText
                 }
                 webView!!.post {
                     webView!!.evaluateJavascript(Common().clickPositionListener()){}
+                    webView!!.evaluateJavascript(Common().scrollListener()){}
                 }
             }
         }
 
         model!!.lamboEvent.observe(this) {
             when (it.optString("event")) {
-                "master_click" -> {
-                    toast = Toast.makeText(this, it.optJSONArray("args")?.getString(2),Toast.LENGTH_LONG)
-                    toast!!.show()
-                }
                 "master_position" -> {
-                    toast = Toast.makeText(this, it.optJSONArray("args")?.toString(),Toast.LENGTH_LONG)
-                    toast!!.show()
+                    model!!.jslog.postValue("pos"+it.optJSONArray("args")?.toString())
+                }
+                "master_scroll" -> {
+                    model!!.jslog.postValue("scr"+it.optJSONArray("args")?.toString())
                 }
                 else -> {
                     toast = Toast.makeText(this, it.optString("event"),Toast.LENGTH_LONG)
@@ -154,8 +151,7 @@ class SiteActivity : AppCompatActivity() {
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
         when (keyCode) {
             KeyEvent.KEYCODE_VOLUME_UP -> {
-                val masterClick = MasterClick(pelpath!!,pelindex!!,pelement!!)
-                model!!.sendEvent(masterClick.json())
+                //
             }
             KeyEvent.KEYCODE_VOLUME_DOWN -> {
                 model!!.sendCommand(AutomationObject("bet","place_bet", arrayOf()))
@@ -166,38 +162,20 @@ class SiteActivity : AppCompatActivity() {
 
     private inner class LamboJsInterface {
         @JavascriptInterface
-        fun performClick(elpath: String, elindex: Int, element: String){
-            pelpath = elpath
-            pelindex = elindex
-            pelement = element
-            if (pelement!! == "input"){
-                inputStake(elpath,elindex)
-            }
-            val masterClick = MasterClick(pelpath!!,pelindex!!,pelement!!)
-            model!!.sendEvent(masterClick.json())
-            model!!.element.postValue(pelement!!)
-        }
-        @JavascriptInterface
         fun getClickPosition(x: Int, y: Int){
             val masterClickXY = MasterClickXY(x,y)
             model!!.sendEvent(masterClickXY.json())
             model!!.jslog.postValue("$x,$y")
         }
         @JavascriptInterface
-        fun getOdds(odds: String){
-            model!!.currentBetIndexOdds.postValue(odds)
-        }
-    }
-
-    private fun inputStake(elpath: String, elindex: Int){
-        val common = Common()
-        webView!!.post {
-            webView!!.evaluateJavascript(common.inputJs(sharedPref!!.getString("stake","200")!!,elpath,elindex)){}
+        fun getScrollPosition(x: Int, y: Int){
+            val masterScroll = MasterScroll(x,y)
+            model!!.sendEvent(masterScroll.json())
         }
     }
 
     private fun startBrowser(){
-        webView!!.loadUrl(betsite_url!!)
+        webView!!.loadUrl(betsiteUrl!!)
         webView!!.webViewClient = object : WebViewClient(){
 
             override fun onPageFinished(view: WebView?, url: String?) {

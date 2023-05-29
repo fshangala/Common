@@ -22,9 +22,6 @@ class SlaveActivity : AppCompatActivity() {
     private var sharedPref: SharedPreferences? = null
     private var toast: Toast? = null
     private var betsiteUrl: String? = null
-    private var elpath:String? = null
-    private var elindex:Int? = null
-    private var element:String? = null
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -66,28 +63,19 @@ class SlaveActivity : AppCompatActivity() {
         }
         model!!.lamboEvent.observe(this) {
             when (it.optString("event")) {
-                "master_click" -> {
-                    elpath = it.optJSONArray("args")!!.getString(0)
-                    elindex = it.optJSONArray("args")!!.getInt(1)
-                    element = it.optJSONArray("args")!!.getString(2)
-                    masterClick(elpath!!,elindex!!,element!!)
-                    toast = Toast.makeText(this, it.optJSONArray("args")?.getString(2),Toast.LENGTH_LONG)
-                    toast!!.show()
-                }
-                "place_bet" -> {
-                    if(element == "input"){
-                        inputStake(elpath!!,elindex!!)
-                    }
-                    toast = Toast.makeText(this, it.optString("event"),Toast.LENGTH_LONG)
-                    toast!!.show()
-                }
                 "master_position" -> {
                     val masterClickXY = MasterClickXY(it.optJSONArray("args")!!.getInt(0),it.optJSONArray("args")!!.getInt(1))
                     webView!!.post {
                         webView!!.evaluateJavascript(masterClickXY.js()){}
                     }
-                    toast = Toast.makeText(this, it.optJSONArray("args")?.toString(),Toast.LENGTH_LONG)
-                    toast!!.show()
+                    model!!.jslog.postValue("pos"+it.optJSONArray("args")?.toString())
+                }
+                "master_scroll" -> {
+                    val masterScroll = MasterScroll(it.optJSONArray("args")!!.getInt(0),it.optJSONArray("args")!!.getInt(1))
+                    webView!!.post {
+                        webView!!.evaluateJavascript(masterScroll.js()){}
+                    }
+                    model!!.jslog.postValue("scr"+it.optJSONArray("args")?.toString())
                 }
                 else -> {
                     toast = Toast.makeText(this, it.optString("event"),Toast.LENGTH_LONG)
@@ -157,43 +145,6 @@ class SlaveActivity : AppCompatActivity() {
         return super.onOptionsItemSelected(item)
     }
 
-    /*private inner class LamboJsInterface {
-        @JavascriptInterface
-        fun performClick(elpath: String, elindex: Int, element: String){
-            model!!.element.postValue(element)
-            val masterClick = MasterClick(elpath,elindex)
-            model!!.sendEvent(masterClick.json())
-        }
-        @JavascriptInterface
-        fun buttonCount(buttons: Int){
-            model!!.oddButtons.postValue(buttons)
-        }
-        @JavascriptInterface
-        fun getOdds(odds: String){
-            model!!.currentBetIndexOdds.postValue(odds)
-        }
-    }*/
-
-    private fun inputStake(elpath: String, elindex: Int){
-        val common = Common()
-        webView!!.post {
-            webView!!.evaluateJavascript(common.inputJs(sharedPref!!.getString("stake","200")!!,elpath,elindex)){
-                model!!.jslog.postValue(element!!)
-            }
-        }
-    }
-
-    private fun masterClick(elpath:String,elindex:Int,element:String){
-        val masterClick = MasterClick(elpath,elindex,element)
-        model!!.element.postValue(element)
-        webView!!.post {
-            webView!!.evaluateJavascript(masterClick.js()){
-                if(element == "input"){
-                    inputStake(elpath,elindex)
-                }
-            }
-        }
-    }
     private fun startBrowser(){
         webView!!.loadUrl(betsiteUrl!!)
         webView!!.webViewClient = object : WebViewClient(){
