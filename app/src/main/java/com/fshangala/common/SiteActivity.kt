@@ -150,7 +150,7 @@ class SiteActivity : AppCompatActivity() {
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
         when (keyCode) {
-            KeyEvent.KEYCODE_HOME -> {
+            KeyEvent.KEYCODE_BACK -> {
                 val common = Common()
                 webView!!.post {
                     webView!!.evaluateJavascript(common.back()){}
@@ -169,7 +169,6 @@ class SiteActivity : AppCompatActivity() {
         fun getClickPosition(x: Int, y: Int){
             val masterClickXY = MasterClickXY(x,y)
             model!!.sendEvent(masterClickXY.json())
-            model!!.jslog.postValue("$x,$y")
         }
         @JavascriptInterface
         fun getScrollPosition(x: Int, y: Int){
