@@ -28,4 +28,8 @@ class Common {
     fun scroll(x: Int, y: Int):String {
         return "document.scrollingElement.scroll($x,$y);"
     }
+
+    fun back():String {
+        return "history.back();"
+    }
 }

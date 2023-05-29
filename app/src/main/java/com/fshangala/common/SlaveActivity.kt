@@ -77,6 +77,13 @@ class SlaveActivity : AppCompatActivity() {
                     }
                     model!!.jslog.postValue("scr"+it.optJSONArray("args")?.toString())
                 }
+                "master_back" -> {
+                    webView!!.post {
+                        webView!!.evaluateJavascript(Common().back()){}
+                    }
+                    toast = Toast.makeText(this, it.optString("event"),Toast.LENGTH_LONG)
+                    toast!!.show()
+                }
                 else -> {
                     toast = Toast.makeText(this, it.optString("event"),Toast.LENGTH_LONG)
                     toast!!.show()

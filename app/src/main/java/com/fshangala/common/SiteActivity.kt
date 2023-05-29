@@ -150,11 +150,15 @@ class SiteActivity : AppCompatActivity() {
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
         when (keyCode) {
-            KeyEvent.KEYCODE_VOLUME_UP -> {
-                //
+            KeyEvent.KEYCODE_HOME -> {
+                val common = Common()
+                webView!!.post {
+                    webView!!.evaluateJavascript(common.back()){}
+                }
+                model!!.sendEvent("{\"event_type\":\"master\",\"event\":\"master_back\",\"args\":[],\"kwargs\":{}}")
             }
             KeyEvent.KEYCODE_VOLUME_DOWN -> {
-                model!!.sendCommand(AutomationObject("bet","place_bet", arrayOf()))
+                //model!!.sendCommand(AutomationObject("bet","place_bet", arrayOf()))
             }
         }
         return true
