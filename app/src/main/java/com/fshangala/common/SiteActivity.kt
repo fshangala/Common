@@ -80,23 +80,35 @@ class SiteActivity : AppCompatActivity() {
                 }
             }
         }
-        model!!.element.observe(this) {
-            var oddButtons = model!!.oddButtons.value
-            var jslog = model!!.jslog.value
-            var stake = sharedPref!!.getString("stake","200")
+        model!!.userrole.observe(this) {
+            val element = model!!.element.value
+            val jslog = model!!.jslog.value
+            val stake = sharedPref!!.getString("stake","200")
             runOnUiThread {
-                oddStatus!!.text = "Buttons:$oddButtons; Element:$it; Stake:$stake; $jslog"
+                val displayText = "Role:$it; Element:$element; Stake:$stake; $jslog"
+                oddStatus!!.text = displayText
+            }
+        }
+        model!!.element.observe(this) {
+            val userrole = model!!.userrole.value
+            val jslog = model!!.jslog.value
+            val stake = sharedPref!!.getString("stake","200")
+            runOnUiThread {
+                val displayText = "Role:$userrole; Element:$it; Stake:$stake; $jslog"
+                oddStatus!!.text = displayText
             }
         }
         model!!.jslog.observe(this) {
-            val oddButtons = model!!.oddButtons.value
+            val userrole = model!!.userrole.value
             val element = model!!.element.value
             val stake = sharedPref!!.getString("stake","200")
             runOnUiThread {
-                oddStatus!!.text = "Buttons:$oddButtons; Element:$element; Stake:$stake; $it"
+                val displayText = "Role:$userrole; Element:$element; Stake:$stake; $it"
+                oddStatus!!.text = displayText
             }
         }
         model!!.createConnection(sharedPref!!)
+        model!!.userrole.postValue("Master")
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -134,8 +146,7 @@ class SiteActivity : AppCompatActivity() {
         @JavascriptInterface
         fun performClick(elpath: String, elindex: Int, element: String){
             model!!.element.postValue(element)
-            val masterClick = MasterClick(elpath,elindex)
-            model!!.jslog.postValue(masterClick.js())
+            val masterClick = MasterClick(elpath,elindex,element)
             model!!.sendEvent(masterClick.json())
         }
         @JavascriptInterface

@@ -31,13 +31,9 @@ class Common {
                 "        var a_id = a.id;\n" +
                 "        var a_name = a.tagName.toLowerCase();\n" +
                 "        b = a_name;\n" +
-                "        if (a_id === '') {\n" +
-                "            if (a_cc.length > 0) {\n" +
-                "                b += \".\"+a_cc.join(\".\");\n" +
-                "            }\n" +
-                "        } else {\n" +
+                "        if (a_id !== '') {\n" +
                 "            b += \"#\"+a_id;\n" +
-                "        };\n" +
+                "        }" +
                 "        return b;\n" +
                 "    });\n" +
                 "    var elpath = stack1.reverse().join(\" \");\n" +

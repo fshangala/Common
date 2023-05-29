@@ -18,7 +18,8 @@ class LamboViewModel : ViewModel() {
     var lamboEvent = MutableLiveData<JSONObject>()
     var connected = MutableLiveData<Boolean>(false)
     var browserLoading = MutableLiveData<Boolean>(false)
-    var oddButtons = MutableLiveData<Int>(0)
+    var oddButtons = MutableLiveData<Int>(0) //deprecated
+    var userrole = MutableLiveData<String>("")
     var currentBetIndex = MutableLiveData<String>("") //deprecated
     var element = MutableLiveData<String>("")
     var currentBetIndexOdds = MutableLiveData<String>("")
