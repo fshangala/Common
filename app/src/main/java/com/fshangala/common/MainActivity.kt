@@ -9,13 +9,12 @@ import android.view.MenuItem
 import android.view.View
 import android.widget.EditText
 import androidx.lifecycle.ViewModelProvider
-import com.google.android.material.textfield.TextInputEditText
 import org.json.JSONArray
 import org.json.JSONObject
 
 class MainActivity : AppCompatActivity() {
     private var model: LamboViewModel? = null
-    var sharedPref: SharedPreferences? = null
+    private var sharedPref: SharedPreferences? = null
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -37,7 +36,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
         model!!.releaseVersionResponseError.observe(this) {
-            val currentVersion = "v"+BuildConfig.VERSION_NAME
+            //val currentVersion = "v"+BuildConfig.VERSION_NAME
             //Log.d("UPDATE",it)
         }
 
@@ -94,7 +93,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    fun loadPreferences(){
+    private fun loadPreferences(){
         val betsite_url = findViewById<EditText>(R.id.betsite_url)
         //val stakeInput = findViewById<EditText>(R.id.stakeInput)
         val usernameInput = findViewById<EditText>(R.id.usernameInput)

@@ -84,6 +84,9 @@ class SlaveActivity : AppCompatActivity() {
                     toast = Toast.makeText(this, it.optString("event"),Toast.LENGTH_LONG)
                     toast!!.show()
                 }
+                "master_input_change" -> {
+                    model!!.jslog.postValue("input"+it.optJSONArray("args")!!.getString(2))
+                }
                 else -> {
                     toast = Toast.makeText(this, it.optString("event"),Toast.LENGTH_LONG)
                     toast!!.show()
