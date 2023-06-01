@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">Common</string>
+    <string name="inputHostIpLabel">Host IP</string>
+    <string name="inputHostPortLabel">Host Port</string>
+    <string name="inputCodeLabel">Code</string>
+    <string name="saveBtn">Save</string>
+    <string name="stakeInputLabel">Stake</string>
 </resources>

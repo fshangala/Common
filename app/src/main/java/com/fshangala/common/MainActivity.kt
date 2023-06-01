@@ -6,7 +6,10 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
+import android.widget.EditText
 import androidx.lifecycle.ViewModelProvider
+import com.google.android.material.textfield.TextInputEditText
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -66,6 +69,23 @@ class MainActivity : AppCompatActivity() {
         }
         return super.onOptionsItemSelected(item)
     }
+    fun savePreferences(view: View){
+        val betsite_url = findViewById<EditText>(R.id.betsite_url)
+        val stakeInput = findViewById<EditText>(R.id.stakeInput)
+
+        val sharedPref = getSharedPreferences("MySettings", MODE_PRIVATE)
+        val editSharedPref = sharedPref.edit()
+        editSharedPref.putString("betsite_url",betsite_url.text.toString())
+        editSharedPref.putString("stake",stakeInput.text.toString())
+        editSharedPref.apply()
+
+        openMain()
+    }
+
+    private fun openMain(){
+        val intent = Intent(this,SiteActivity::class.java)
+        startActivity(intent)
+    }
 
     private fun openConfig(){
         val intent = Intent(this,ConfigActivity::class.java)
@@ -74,5 +94,8 @@ class MainActivity : AppCompatActivity() {
     private fun openUpdate(){
         val intent = Intent(this,UpdateActivity::class.java)
         startActivity(intent)
+    }
+    fun checkForUpdates(view: View){
+        openUpdate()
     }
 }
