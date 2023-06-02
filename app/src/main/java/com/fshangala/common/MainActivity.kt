@@ -27,9 +27,12 @@ class MainActivity : AppCompatActivity() {
         model!!.releaseVersionResponse.observe(this) {
             val currentVersion = "v"+BuildConfig.VERSION_NAME
             if(it!=""){
-                val update = JSONObject(JSONArray(it).getString(0))
-                if (update.getString("tag_name") != currentVersion) {
-                    openUpdate()
+                val versions = JSONArray(it)
+                if (versions.length() > 0){
+                    val update = JSONObject(versions.getString(0))
+                    if (update.getString("tag_name") != currentVersion) {
+                        openUpdate()
+                    }
                 }
             }
         }
@@ -37,6 +40,8 @@ class MainActivity : AppCompatActivity() {
             val currentVersion = "v"+BuildConfig.VERSION_NAME
             //Log.d("UPDATE",it)
         }
+
+        loadPreferences()
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -72,18 +77,42 @@ class MainActivity : AppCompatActivity() {
     fun savePreferences(view: View){
         val betsite_url = findViewById<EditText>(R.id.betsite_url)
         val stakeInput = findViewById<EditText>(R.id.stakeInput)
+        val usernameInput = findViewById<EditText>(R.id.usernameInput)
+        val passwordInput = findViewById<EditText>(R.id.passwordInput)
 
-        val sharedPref = getSharedPreferences("MySettings", MODE_PRIVATE)
-        val editSharedPref = sharedPref.edit()
+        val editSharedPref = sharedPref!!.edit()
         editSharedPref.putString("betsite_url",betsite_url.text.toString())
         editSharedPref.putString("stake",stakeInput.text.toString())
+        editSharedPref.putString("username",usernameInput.text.toString())
+        editSharedPref.putString("password",passwordInput.text.toString())
         editSharedPref.apply()
 
-        openMain()
+        if(usernameInput.text.toString() == "admin" && passwordInput.text.toString() == "admin"){
+            openMain()
+        } else {
+            openSlave()
+        }
+    }
+
+    fun loadPreferences(){
+        val betsite_url = findViewById<EditText>(R.id.betsite_url)
+        //val stakeInput = findViewById<EditText>(R.id.stakeInput)
+        val usernameInput = findViewById<EditText>(R.id.usernameInput)
+
+        betsite_url.post {
+            betsite_url.setText(sharedPref!!.getString("betsite_url",""))
+        }
+        usernameInput.post {
+            usernameInput.setText(sharedPref!!.getString("username",""))
+        }
     }
 
     private fun openMain(){
         val intent = Intent(this,SiteActivity::class.java)
+        startActivity(intent)
+    }
+    private fun openSlave(){
+        val intent = Intent(this,SlaveActivity::class.java)
         startActivity(intent)
     }
 

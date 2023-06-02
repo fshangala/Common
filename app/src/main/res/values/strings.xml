@@ -5,4 +5,6 @@
     <string name="inputCodeLabel">Code</string>
     <string name="saveBtn">Save</string>
     <string name="stakeInputLabel">Stake</string>
+    <string name="usernameInput">Username</string>
+    <string name="passwordInput">password</string>
 </resources>

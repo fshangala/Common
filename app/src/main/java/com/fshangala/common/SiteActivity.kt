@@ -14,6 +14,8 @@ import android.webkit.WebViewClient
 import android.widget.TextView
 import android.widget.Toast
 import androidx.lifecycle.ViewModelProvider
+import java.time.LocalDateTime
+import java.time.ZoneOffset
 
 class SiteActivity : AppCompatActivity() {
     private var webView: WebView? = null
@@ -60,8 +62,41 @@ class SiteActivity : AppCompatActivity() {
                 runOnUiThread {
                     status!!.text = "Loaded!"
                 }
+                webView!!.post {
+                    webView!!.evaluateJavascript(Common().eventListenerJs()){}
+                }
             }
         }
+
+        model!!.lamboEvent.observe(this) {
+            when (it.optString("event")) {
+                "master_click" -> {
+                    toast = Toast.makeText(this, it.optJSONArray("args")?.getString(0),Toast.LENGTH_LONG)
+                    toast!!.show()
+                }
+                else -> {
+                    toast = Toast.makeText(this, it.optJSONArray("args")?.getString(0),Toast.LENGTH_LONG)
+                    toast!!.show()
+                }
+            }
+        }
+        model!!.element.observe(this) {
+            var oddButtons = model!!.oddButtons.value
+            var jslog = model!!.jslog.value
+            var stake = sharedPref!!.getString("stake","200")
+            runOnUiThread {
+                oddStatus!!.text = "Buttons:$oddButtons; Element:$it; Stake:$stake; $jslog"
+            }
+        }
+        model!!.jslog.observe(this) {
+            val oddButtons = model!!.oddButtons.value
+            val element = model!!.element.value
+            val stake = sharedPref!!.getString("stake","200")
+            runOnUiThread {
+                oddStatus!!.text = "Buttons:$oddButtons; Element:$element; Stake:$stake; $it"
+            }
+        }
+        model!!.createConnection(sharedPref!!)
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -89,7 +124,7 @@ class SiteActivity : AppCompatActivity() {
             }
 
             R.id.reloadBrowserBtn -> {
-                model!!.getRequest(sharedPref!!,"/betsite/")
+                webView!!.reload()
             }
         }
         return super.onOptionsItemSelected(item)
@@ -97,8 +132,11 @@ class SiteActivity : AppCompatActivity() {
 
     private inner class LamboJsInterface {
         @JavascriptInterface
-        fun performClick(target: String){
-            model!!.currentBetIndex.postValue(target)
+        fun performClick(elpath: String, elindex: Int, element: String){
+            model!!.element.postValue(element)
+            val masterClick = MasterClick(elpath,elindex)
+            model!!.jslog.postValue(masterClick.js())
+            model!!.sendEvent(masterClick.json())
         }
         @JavascriptInterface
         fun buttonCount(buttons: Int){
