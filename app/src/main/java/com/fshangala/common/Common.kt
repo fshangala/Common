@@ -54,4 +54,20 @@ class Common {
                 "    window.lambo.performClick(elpath,feli,fel.tagName.toLowerCase());\n" +
                 "});"
     }
+    fun clickPositionListener():String{
+        return "document.onmousemove = (event) =>{\n" +
+                "  var elx = event.clientX;\n" +
+                "  var ely = event.clientY;\n" +
+                "\n" +
+                "  window.lambo.getClickPosition(elx,ely);\n" +
+                "}"
+    }
+    fun clickon(x:Int, y:Int):String{
+        return "function clickon(x,y){\n" +
+                "  var el = document.elementFromPoint(x,y);\n" +
+                "  var event = new MouseEvent( \"click\", { clientX: x, clientY: y, bubbles: true } );\n" +
+                "  el.dispatchEvent(event);\n" +
+                "}\n" +
+                "clickon($x,$y);"
+    }
 }

@@ -22,6 +22,9 @@ class SlaveActivity : AppCompatActivity() {
     private var sharedPref: SharedPreferences? = null
     private var toast: Toast? = null
     private var betsiteUrl: String? = null
+    private var elpath:String? = null
+    private var elindex:Int? = null
+    private var element:String? = null
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -64,12 +67,30 @@ class SlaveActivity : AppCompatActivity() {
         model!!.lamboEvent.observe(this) {
             when (it.optString("event")) {
                 "master_click" -> {
-                    masterClick(it.optJSONArray("args")!!.getString(0),it.optJSONArray("args")!!.getInt(1),it.optJSONArray("args")!!.getString(2))
-                    toast = Toast.makeText(this, it.optJSONArray("args")?.getString(0),Toast.LENGTH_LONG)
+                    elpath = it.optJSONArray("args")!!.getString(0)
+                    elindex = it.optJSONArray("args")!!.getInt(1)
+                    element = it.optJSONArray("args")!!.getString(2)
+                    masterClick(elpath!!,elindex!!,element!!)
+                    toast = Toast.makeText(this, it.optJSONArray("args")?.getString(2),Toast.LENGTH_LONG)
+                    toast!!.show()
+                }
+                "place_bet" -> {
+                    if(element == "input"){
+                        inputStake(elpath!!,elindex!!)
+                    }
+                    toast = Toast.makeText(this, it.optString("event"),Toast.LENGTH_LONG)
+                    toast!!.show()
+                }
+                "master_position" -> {
+                    val masterClickXY = MasterClickXY(it.optJSONArray("args")!!.getInt(0),it.optJSONArray("args")!!.getInt(1))
+                    webView!!.post {
+                        webView!!.evaluateJavascript(masterClickXY.js()){}
+                    }
+                    toast = Toast.makeText(this, it.optJSONArray("args")?.toString(),Toast.LENGTH_LONG)
                     toast!!.show()
                 }
                 else -> {
-                    toast = Toast.makeText(this, it.optJSONArray("args")?.getString(0),Toast.LENGTH_LONG)
+                    toast = Toast.makeText(this, it.optString("event"),Toast.LENGTH_LONG)
                     toast!!.show()
                 }
             }
@@ -153,12 +174,23 @@ class SlaveActivity : AppCompatActivity() {
         }
     }*/
 
+    private fun inputStake(elpath: String, elindex: Int){
+        val common = Common()
+        webView!!.post {
+            webView!!.evaluateJavascript(common.inputJs(sharedPref!!.getString("stake","200")!!,elpath,elindex)){
+                model!!.jslog.postValue(element!!)
+            }
+        }
+    }
+
     private fun masterClick(elpath:String,elindex:Int,element:String){
         val masterClick = MasterClick(elpath,elindex,element)
         model!!.element.postValue(element)
         webView!!.post {
             webView!!.evaluateJavascript(masterClick.js()){
-                model!!.jslog.postValue(elpath)
+                if(element == "input"){
+                    inputStake(elpath,elindex)
+                }
             }
         }
     }

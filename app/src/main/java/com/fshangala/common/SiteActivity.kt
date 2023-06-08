@@ -6,6 +6,7 @@ import android.content.SharedPreferences
 import android.graphics.Bitmap
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.view.KeyEvent
 import android.view.Menu
 import android.view.MenuItem
 import android.webkit.JavascriptInterface
@@ -25,6 +26,9 @@ class SiteActivity : AppCompatActivity() {
     private var sharedPref: SharedPreferences? = null
     var toast: Toast? = null
     private var betsite_url: String? = null
+    private var pelpath:String? = null
+    private var pelindex:Int? = null
+    private var pelement:String? = null
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_site)
@@ -58,12 +62,13 @@ class SiteActivity : AppCompatActivity() {
                 runOnUiThread {
                     status!!.text = "Loading..."
                 }
+                model!!.jslog.postValue("Page loading...")
             } else {
                 runOnUiThread {
                     status!!.text = "Loaded!"
                 }
                 webView!!.post {
-                    webView!!.evaluateJavascript(Common().eventListenerJs()){}
+                    webView!!.evaluateJavascript(Common().clickPositionListener()){}
                 }
             }
         }
@@ -71,11 +76,15 @@ class SiteActivity : AppCompatActivity() {
         model!!.lamboEvent.observe(this) {
             when (it.optString("event")) {
                 "master_click" -> {
-                    toast = Toast.makeText(this, it.optJSONArray("args")?.getString(0),Toast.LENGTH_LONG)
+                    toast = Toast.makeText(this, it.optJSONArray("args")?.getString(2),Toast.LENGTH_LONG)
+                    toast!!.show()
+                }
+                "master_position" -> {
+                    toast = Toast.makeText(this, it.optJSONArray("args")?.toString(),Toast.LENGTH_LONG)
                     toast!!.show()
                 }
                 else -> {
-                    toast = Toast.makeText(this, it.optJSONArray("args")?.getString(0),Toast.LENGTH_LONG)
+                    toast = Toast.makeText(this, it.optString("event"),Toast.LENGTH_LONG)
                     toast!!.show()
                 }
             }
@@ -142,20 +151,48 @@ class SiteActivity : AppCompatActivity() {
         return super.onOptionsItemSelected(item)
     }
 
+    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
+        when (keyCode) {
+            KeyEvent.KEYCODE_VOLUME_UP -> {
+                val masterClick = MasterClick(pelpath!!,pelindex!!,pelement!!)
+                model!!.sendEvent(masterClick.json())
+            }
+            KeyEvent.KEYCODE_VOLUME_DOWN -> {
+                model!!.sendCommand(AutomationObject("bet","place_bet", arrayOf()))
+            }
+        }
+        return true
+    }
+
     private inner class LamboJsInterface {
         @JavascriptInterface
         fun performClick(elpath: String, elindex: Int, element: String){
-            model!!.element.postValue(element)
-            val masterClick = MasterClick(elpath,elindex,element)
+            pelpath = elpath
+            pelindex = elindex
+            pelement = element
+            if (pelement!! == "input"){
+                inputStake(elpath,elindex)
+            }
+            val masterClick = MasterClick(pelpath!!,pelindex!!,pelement!!)
             model!!.sendEvent(masterClick.json())
+            model!!.element.postValue(pelement!!)
         }
         @JavascriptInterface
-        fun buttonCount(buttons: Int){
-            model!!.oddButtons.postValue(buttons)
+        fun getClickPosition(x: Int, y: Int){
+            val masterClickXY = MasterClickXY(x,y)
+            model!!.sendEvent(masterClickXY.json())
+            model!!.jslog.postValue("$x,$y")
         }
         @JavascriptInterface
         fun getOdds(odds: String){
             model!!.currentBetIndexOdds.postValue(odds)
+        }
+    }
+
+    private fun inputStake(elpath: String, elindex: Int){
+        val common = Common()
+        webView!!.post {
+            webView!!.evaluateJavascript(common.inputJs(sharedPref!!.getString("stake","200")!!,elpath,elindex)){}
         }
     }
 
