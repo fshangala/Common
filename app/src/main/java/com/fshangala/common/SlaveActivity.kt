@@ -84,6 +84,13 @@ class SlaveActivity : AppCompatActivity() {
                     toast = Toast.makeText(this, it.optString("event"),Toast.LENGTH_LONG)
                     toast!!.show()
                 }
+                "master_input_change" -> {
+                    model!!.jslog.postValue("input"+it.optJSONArray("args")!!.getString(2))
+                    val masterInputChange = MasterInputChange(it.optJSONArray("args")!!.getString(0),it.optJSONArray("args")!!.getInt(1),it.optJSONArray("args")!!.getString(2))
+                    webView!!.post {
+                        webView!!.evaluateJavascript(masterInputChange.js()){}
+                    }
+                }
                 else -> {
                     toast = Toast.makeText(this, it.optString("event"),Toast.LENGTH_LONG)
                     toast!!.show()

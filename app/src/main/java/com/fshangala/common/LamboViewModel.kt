@@ -5,6 +5,7 @@ import android.os.Build
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import okhttp3.*
+import okio.BufferedSink
 import org.json.JSONObject
 import java.time.LocalDateTime
 import java.time.ZoneOffset
@@ -13,21 +14,26 @@ class LamboViewModel : ViewModel() {
     private val appClient = OkHttpClient()
     private var appSocket: WebSocket? = null
 
-    var connectionStatus = MutableLiveData<String>("")
+    var connectionStatus = MutableLiveData("")
     var automationEvents = MutableLiveData<AutomationEvents>() //deprecated
     var lamboEvent = MutableLiveData<JSONObject>()
-    var connected = MutableLiveData<Boolean>(false)
-    var browserLoading = MutableLiveData<Boolean>(false)
-    var oddButtons = MutableLiveData<Int>(0) //deprecated
-    var userrole = MutableLiveData<String>("")
-    var currentBetIndex = MutableLiveData<String>("") //deprecated
-    var element = MutableLiveData<String>("")
-    var currentBetIndexOdds = MutableLiveData<String>("")
-    var jslog = MutableLiveData<String>("")
-    var apiResponse = MutableLiveData<String>("")
-    var apiResponseError = MutableLiveData<String>("")
-    var releaseVersionResponse = MutableLiveData<String>("")
-    var releaseVersionResponseError = MutableLiveData<String>("")
+    var connected = MutableLiveData(false)
+    var browserLoading = MutableLiveData(false)
+    var oddButtons = MutableLiveData(0) //deprecated
+    var userrole = MutableLiveData("")
+    var currentBetIndex = MutableLiveData("") //deprecated
+    var element = MutableLiveData("")
+    var currentBetIndexOdds = MutableLiveData("") //deprecated
+    var jslog = MutableLiveData("")
+    var apiResponse = MutableLiveData("")
+    var apiResponseError = MutableLiveData("")
+    var releaseVersionResponse = MutableLiveData("")
+    var releaseVersionResponseError = MutableLiveData("")
+    var loginResponse = MutableLiveData("")
+    var loginResponseError = MutableLiveData("")
+    var loggedinUserResponse = MutableLiveData("")
+    var loggedinUserError = MutableLiveData("")
+    var loading = MutableLiveData(false)
 
     fun createConnection(sharedPref: SharedPreferences){
         connectionStatus.postValue("Connecting...")
@@ -131,6 +137,53 @@ class LamboViewModel : ViewModel() {
         }
         thread.start()
 
+    }
+
+    fun login(sharedPref: SharedPreferences, username: String, password: String) {
+        val hostIp = sharedPref.getString("hostIp","13.233.109.76")
+        val hostPort = sharedPref.getInt("hostPort",80).toString()
+
+        val host = "http://$hostIp:$hostPort/accounts/api/token-auth/"
+        val formBody = FormBody.Builder().add("username",username).add("password",password).build()
+        val appRequest = Request.Builder().url(host).post(formBody).build()
+        val call = appClient.newCall(appRequest)
+
+        val thread = Thread {
+            try {
+                val response = call.execute()
+                if (response.code == 200) {
+                    loginResponse.postValue(response.body!!.string())
+                } else {
+                    loginResponseError.postValue(response.body!!.string())
+                }
+            } catch(ex:Exception) {
+                loginResponseError.postValue(ex.message)
+            }
+        }
+        thread.start()
+    }
+
+    fun loggedinUser(sharedPref: SharedPreferences, token: String) {
+        val hostIp = sharedPref.getString("hostIp", "13.233.109.76")
+        val hostPort = sharedPref.getInt("hostPort", 80).toString()
+
+        val host = "http://$hostIp:$hostPort/accounts/api/loggedin-user/?token=$token"
+        val appRequest = Request.Builder().url(host).get().build()
+        val call = appClient.newCall(appRequest)
+
+        val thread = Thread {
+            try {
+                val response = call.execute()
+                if (response.code == 200) {
+                    loggedinUserResponse.postValue(response.body!!.string())
+                } else {
+                    loggedinUserError.postValue(response.body!!.string())
+                }
+            } catch (ex: Exception) {
+                loggedinUserError.postValue(ex.message)
+            }
+        }
+        thread.start()
     }
 
     fun getLatestRelease(){

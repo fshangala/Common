@@ -24,9 +24,6 @@ class SiteActivity : AppCompatActivity() {
     private var sharedPref: SharedPreferences? = null
     private var toast: Toast? = null
     private var betsiteUrl: String? = null
-    private var pelpath:String? = null
-    private var pelindex:Int? = null
-    private var pelement:String? = null
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -79,6 +76,9 @@ class SiteActivity : AppCompatActivity() {
                 }
                 "master_scroll" -> {
                     model!!.jslog.postValue("scr"+it.optJSONArray("args")?.toString())
+                }
+                "master_input_change" -> {
+                    model!!.jslog.postValue("input"+it.optJSONArray("args")!!.getString(2))
                 }
                 else -> {
                     toast = Toast.makeText(this, it.optString("event"),Toast.LENGTH_LONG)
@@ -174,6 +174,11 @@ class SiteActivity : AppCompatActivity() {
         fun getScrollPosition(x: Int, y: Int){
             val masterScroll = MasterScroll(x,y)
             model!!.sendEvent(masterScroll.json())
+        }
+        @JavascriptInterface
+        fun inputChange(path: String, index: Int, value: String){
+            val masterInputChange = MasterInputChange(path,index,value)
+            model!!.sendEvent(masterInputChange.json())
         }
     }
 
